@@ -1,1 +1,635 @@
-yy
+import React, { useState, useEffect } from 'react';
+
+interface JobApplication {
+  jobId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  college: string;
+  currentCompany: string;
+  skills: string[];
+  experience: string;
+  readyToJoin: string;
+  resume: File | null;
+  coverLetter: string;
+}
+
+interface JobPosting {
+  id: string;
+  title: string;
+  type: string;
+  location: string;
+  experience: string;
+  skills: string[];
+  description: string;
+  requirements: string[];
+  responsibilities: string[];
+  isActive?: boolean;
+  createdDate?: string;
+  updatedDate?: string;
+}
+
+const Careers: React.FC = () => {
+  const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [application, setApplication] = useState<JobApplication>({
+    jobId: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    college: '',
+    currentCompany: '',
+    skills: [],
+    experience: '',
+    readyToJoin: '',
+    resume: null,
+    coverLetter: ''
+  });
+
+  const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
+
+  // Load jobs from localStorage (admin managed)
+  useEffect(() => {
+    const savedJobs = localStorage.getItem('adminJobs');
+    if (savedJobs) {
+      const allJobs = JSON.parse(savedJobs);
+      // Only show active jobs to public
+      setJobPostings(allJobs.filter((job: JobPosting) => job.isActive));
+    } else {
+      // Default jobs if none exist
+      const defaultJobs: JobPosting[] = [
+        {
+          id: 'sde-1',
+          title: 'Software Development Engineer - 1',
+          type: 'Full-time',
+          location: 'Remote / Hybrid',
+          experience: '1-3 years',
+          skills: ['React', 'TypeScript', 'JavaScript', 'HTML/CSS', 'Git', 'RESTful APIs'],
+          description: 'Join our healthcare technology team to build next-generation patient experience solutions using modern web technologies.',
+          requirements: [
+            'Bachelor\'s degree in Computer Science or related field',
+            '1-3 years of experience in frontend development',
+            'Strong proficiency in React and TypeScript',
+            'Experience with modern CSS frameworks (Tailwind CSS preferred)',
+            'Understanding of responsive web design principles',
+            'Knowledge of version control systems (Git)',
+            'Good communication and problem-solving skills'
+          ],
+          responsibilities: [
+            'Develop and maintain user-facing healthcare applications',
+            'Collaborate with UX/UI designers to implement responsive designs',
+            'Write clean, maintainable, and well-documented code',
+            'Participate in code reviews and technical discussions',
+            'Work with backend teams to integrate APIs',
+            'Ensure cross-browser compatibility and performance optimization'
+          ]
+        },
+        {
+          id: 'product-manager',
+          title: 'Product Manager',
+          type: 'Full-time',
+          location: 'Remote / Hybrid',
+          experience: '3-5 years',
+          skills: ['Product Strategy', 'Healthcare Domain', 'Analytics', 'Agile', 'User Research', 'Market Analysis'],
+          description: 'Lead product development for our healthcare queue management platform and drive strategic product decisions.',
+          requirements: [
+            'Bachelor\'s/Master\'s degree in Business, Engineering, or related field',
+            '3-5 years of product management experience',
+            'Healthcare technology experience preferred',
+            'Strong analytical and data-driven decision making skills',
+            'Experience with Agile development methodologies',
+            'Excellent communication and leadership skills',
+            'Understanding of healthcare workflows and patient experience'
+          ],
+          responsibilities: [
+            'Define product roadmap and strategy for healthcare solutions',
+            'Gather and prioritize product requirements from stakeholders',
+            'Work closely with engineering, design, and business teams',
+            'Conduct market research and competitive analysis',
+            'Manage product launches and go-to-market strategies',
+            'Analyze product metrics and user feedback for continuous improvement'
+          ]
+        }
+      ];
+      setJobPostings(defaultJobs);
+    }
+  }, []);
+
+  const availableSkills = [
+    'React', 'TypeScript', 'JavaScript', 'HTML/CSS', '.NET Core', 'C#', 'SQL Server', 
+    'Node.js', 'Python', 'Java', 'Angular', 'Vue.js', 'Azure', 'AWS', 'Docker', 
+    'Kubernetes', 'Git', 'Agile', 'Scrum', 'Product Strategy', 'Healthcare Domain',
+    'Analytics', 'User Research', 'System Design', 'Microservices', 'RESTful APIs',
+    'Tailwind CSS', 'Bootstrap', 'SignalR', 'Entity Framework', 'Redis', 'MongoDB'
+  ];
+
+  const handleJobSelect = (jobId: string) => {
+    setSelectedJob(jobId);
+    setShowApplicationForm(true);
+    setApplication({ ...application, jobId });
+  };
+
+  const handleSkillToggle = (skill: string) => {
+    const updatedSkills = application.skills.includes(skill)
+      ? application.skills.filter(s => s !== skill)
+      : [...application.skills, skill];
+    setApplication({ ...application, skills: updatedSkills });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setApplication({ ...application, resume: file });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Create email content
+    const emailBody = `
+New Job Application Received
+
+Job Position: ${jobPostings.find(job => job.id === application.jobId)?.title}
+Application Details:
+
+Personal Information:
+- Name: ${application.firstName} ${application.lastName}
+- Email: ${application.email}
+- Phone: ${application.phone}
+- Address: ${application.address}
+
+Professional Background:
+- College: ${application.college}
+- Current Company: ${application.currentCompany}
+- Experience: ${application.experience}
+- Skills: ${application.skills.join(', ')}
+- Ready to Join: ${application.readyToJoin}
+
+Cover Letter:
+${application.coverLetter}
+
+Resume: ${application.resume ? application.resume.name : 'Not provided'}
+    `;
+
+    // In a real application, you would send this to your backend
+    // For now, we'll show a success message
+    console.log('Application submitted:', application);
+    alert('Application submitted successfully! We will review your application and get back to you soon.');
+    
+    // Reset form
+    setApplication({
+      jobId: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      address: '',
+      college: '',
+      currentCompany: '',
+      skills: [],
+      experience: '',
+      readyToJoin: '',
+      resume: null,
+      coverLetter: ''
+    });
+    setShowApplicationForm(false);
+    setSelectedJob(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-16">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Join Our Team</h1>
+          <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto">
+            Help us revolutionize healthcare through innovative technology solutions
+          </p>
+          <div className="mt-8 inline-block bg-white/10 backdrop-blur-sm rounded-lg px-6 py-3">
+            <p className="text-lg font-semibold">Smart Queue Optimizer - Healthcare Technology</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        {!showApplicationForm ? (
+          <div>
+            {/* Why Work With Us */}
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">Why Choose Smart Queue Optimizer?</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="bg-white p-8 rounded-2xl shadow-lg">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14c0-5.5-3.5-10-9-10s-9 4.5-9 10c0 1.5.5 3 1 4l8 8 8-8c.5-1 1-2.5 1-4z"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Healthcare Impact</h3>
+                  <p className="text-gray-600">
+                    Work on technology that directly improves patient experiences and healthcare delivery
+                  </p>
+                </div>
+                <div className="bg-white p-8 rounded-2xl shadow-lg">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Innovation First</h3>
+                  <p className="text-gray-600">
+                    Use cutting-edge technologies including AI, real-time systems, and modern web frameworks
+                  </p>
+                </div>
+                <div className="bg-white p-8 rounded-2xl shadow-lg">
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Growth Focused</h3>
+                  <p className="text-gray-600">
+                    Continuous learning opportunities with mentorship and professional development
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Job Postings */}
+            <div className="mb-16">
+              <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Open Positions</h2>
+              {jobPostings.length === 0 ? (
+                <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">No Open Positions</h3>
+                  <p className="text-lg text-gray-600 mb-6">
+                    We're not actively hiring at the moment, but we're always interested in connecting with talented individuals.
+                  </p>
+                  <p className="text-gray-600">
+                    Feel free to send your resume to <strong>gautammukesh935@gmail.com</strong> for future opportunities.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {jobPostings.map((job) => (
+                    <div key={job.id} className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
+                      <div className="flex justify-between items-start mb-6">
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-2">{job.title}</h3>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                              {job.type}
+                            </span>
+                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                              {job.location}
+                            </span>
+                            <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">
+                              {job.experience}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-600 mb-6">{job.description}</p>
+
+                      <div className="mb-6">
+                        <h4 className="font-semibold text-gray-900 mb-3">Key Skills Required:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {job.skills.map((skill, index) => (
+                            <span key={index} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mb-6">
+                        <h4 className="font-semibold text-gray-900 mb-3">Key Responsibilities:</h4>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          {job.responsibilities.slice(0, 3).map((resp, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="text-blue-500 mr-2">•</span>
+                              {resp}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <button
+                        onClick={() => handleJobSelect(job.id)}
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200"
+                      >
+                        Apply Now
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <div className="mb-8">
+                <button
+                  onClick={() => {
+                    setShowApplicationForm(false);
+                    setSelectedJob(null);
+                  }}
+                  className="text-blue-600 hover:text-blue-800 font-medium mb-4 flex items-center"
+                >
+                  ← Back to Jobs
+                </button>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Apply for {jobPostings.find(job => job.id === selectedJob)?.title}
+                </h2>
+                <p className="text-gray-600">
+                  Fill out the form below to submit your application. All fields marked with * are required.
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Personal Information */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Personal Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        First Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={application.firstName}
+                        onChange={(e) => setApplication({ ...application, firstName: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={application.lastName}
+                        onChange={(e) => setApplication({ ...application, lastName: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={application.email}
+                        onChange={(e) => setApplication({ ...application, email: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={application.phone}
+                        onChange={(e) => setApplication({ ...application, phone: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Address *
+                    </label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={application.address}
+                      onChange={(e) => setApplication({ ...application, address: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your complete address"
+                    />
+                  </div>
+                </div>
+
+                {/* Professional Information */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Professional Background</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        College/University *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={application.college}
+                        onChange={(e) => setApplication({ ...application, college: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., Stanford University"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Current Company
+                      </label>
+                      <input
+                        type="text"
+                        value={application.currentCompany}
+                        onChange={(e) => setApplication({ ...application, currentCompany: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., Google (or 'Fresher' if no experience)"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Years of Experience *
+                    </label>
+                    <select
+                      required
+                      value={application.experience}
+                      onChange={(e) => setApplication({ ...application, experience: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select experience level</option>
+                      <option value="fresher">Fresher (0 years)</option>
+                      <option value="1-2">1-2 years</option>
+                      <option value="2-3">2-3 years</option>
+                      <option value="3-5">3-5 years</option>
+                      <option value="5-8">5-8 years</option>
+                      <option value="8+">8+ years</option>
+                    </select>
+                  </div>
+
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ready to Join *
+                    </label>
+                    <select
+                      required
+                      value={application.readyToJoin}
+                      onChange={(e) => setApplication({ ...application, readyToJoin: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select availability</option>
+                      <option value="immediate">Immediately</option>
+                      <option value="2-weeks">2 weeks notice</option>
+                      <option value="1-month">1 month notice</option>
+                      <option value="2-months">2 months notice</option>
+                      <option value="negotiable">Negotiable</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Skills */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Technical Skills</h3>
+                  <p className="text-sm text-gray-600 mb-4">Select all skills that apply to you:</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {availableSkills.map((skill) => (
+                      <label key={skill} className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={application.skills.includes(skill)}
+                          onChange={() => handleSkillToggle(skill)}
+                          className="text-blue-600 focus:ring-blue-500 rounded"
+                        />
+                        <span className="text-sm text-gray-700">{skill}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Resume Upload */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Resume *</h3>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleFileUpload}
+                      className="w-full"
+                      required
+                    />
+                    <p className="text-sm text-gray-500 mt-2">
+                      Accepted formats: PDF, DOC, DOCX (Max size: 5MB)
+                    </p>
+                    {application.resume && (
+                      <p className="text-sm text-green-600 mt-2 flex items-center">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        File uploaded: {application.resume.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Cover Letter */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Cover Letter</h3>
+                  <textarea
+                    rows={6}
+                    value={application.coverLetter}
+                    onChange={(e) => setApplication({ ...application, coverLetter: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Tell us why you're interested in this position and what makes you a great fit..."
+                  />
+                </div>
+
+                {/* Submit */}
+                <div className="pt-6">
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200"
+                  >
+                    Submit Application
+                  </button>
+                  <p className="text-sm text-gray-500 text-center mt-4">
+                    By submitting this form, your application will be sent to: gautammukesh935@gmail.com
+                  </p>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+          
+        {/* Company Culture Section */}
+        {!showApplicationForm && (
+            <>
+              <div className="mt-16 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl p-12">
+                <div className="text-center">
+                  <h2 className="text-3xl font-bold mb-6">Join the Healthcare Revolution</h2>
+                  <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
+                    Be part of a team that's transforming healthcare delivery through innovative technology solutions. 
+                    Work with cutting-edge technologies while making a real impact on patient experiences.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                    <div>
+                      <div className="text-4xl font-bold text-blue-200">500+</div>
+                      <div className="text-blue-100">Healthcare Facilities</div>
+                    </div>
+                    <div>
+                      <div className="text-4xl font-bold text-blue-200">70%</div>
+                      <div className="text-blue-100">Wait Time Reduction</div>
+                    </div>
+                    <div>
+                      <div className="text-4xl font-bold text-blue-200">24/7</div>
+                      <div className="text-blue-100">System Reliability</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Section */}
+              <div className="mt-16 bg-gray-50 py-16 rounded-2xl">
+                <div className="max-w-4xl mx-auto px-6 text-center">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-6">Questions About Careers?</h2>
+                  <p className="text-xl text-gray-600 mb-8">
+                    Don't see a position that fits? We're always looking for talented individuals.
+                  </p>
+                  <div className="bg-white p-8 rounded-2xl shadow-lg max-w-2xl mx-auto">
+                    <p className="text-gray-700 mb-4">
+                      Reach out to our HR team for more information about current and future opportunities.
+                    </p>
+                    <div className="space-y-2">
+                      <p className="font-semibold text-gray-900">HR Contact</p>
+                      <p className="text-blue-600">gautammukesh935@gmail.com</p>
+                      <p className="text-sm text-gray-500">We'll get back to you within 24 hours</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Careers;
+
+ERROR in ./src/components/Careers.tsx
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: C:\Users\MU20587448\Downloads\Scale\smart-queue-client\src\components\Careers.tsx: Adjacent JSX elements must be wrapped in an enclosing tag. Did you want a JSX fragment <>...</>? (620:4)
+
+  618 |         </div>
+  619 |       </div>
+> 620 |     </div>
+      |     ^
+  621 |   );
+  622 | };
